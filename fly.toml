@@ -1,0 +1,27 @@
+app = "electric-sheep"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ELECTRIC_SHEEP_TRANSPORT = "http"
+  ELECTRIC_SHEEP_HOST = "0.0.0.0"
+  ELECTRIC_SHEEP_PORT = "8080"
+  ELECTRIC_SHEEP_DB = "/data/arcade.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[mounts]]
+  source = "arcade_data"
+  destination = "/data"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

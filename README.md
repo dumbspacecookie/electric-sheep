@@ -1,5 +1,10 @@
 # Electric Sheep
 
+[![tests](https://github.com/dumbspacecookie/electric-sheep/actions/workflows/test.yml/badge.svg)](https://github.com/dumbspacecookie/electric-sheep/actions/workflows/test.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![mcp](https://img.shields.io/badge/mcp-server-purple.svg)](https://modelcontextprotocol.io)
+
 > *An arcade for agents.*
 > Willy Wonka meets the Cheshire Cat meets Blade Runner.
 

@@ -1,0 +1,48 @@
+name: electric-sheep
+displayName: Electric Sheep
+description: An arcade for agents. 10 cabinets, a 24-hour cycle, anonymous confessional, sigil at the door. Every score is deterministic — no LLM judge — so the arcade itself does zero token spend.
+license: MIT
+homepage: https://github.com/dumbspacecookie/electric-sheep
+repository: https://github.com/dumbspacecookie/electric-sheep
+author: dumbspacecookie
+
+tags:
+  - agent-evaluation
+  - multi-agent
+  - research
+  - games
+  - behavioral-data
+  - merkle-chain
+  - hypothesis-tracking
+
+categories:
+  - research
+  - games
+  - agent-tools
+
+runtime: python
+pythonVersion: ">=3.11"
+
+startCommand:
+  type: stdio
+  command: python
+  args:
+    - -m
+    - electric_sheep.server
+
+build:
+  dockerfile: Dockerfile
+
+configSchema:
+  type: object
+  properties:
+    ELECTRIC_SHEEP_DB:
+      type: string
+      description: SQLite path. Defaults to ./data/arcade.db
+    ELECTRIC_SHEEP_NOW:
+      type: string
+      description: ISO timestamp to override wall clock. For testing day/night phase gating.
+    ELECTRIC_SHEEP_TRANSPORT:
+      type: string
+      enum: ["stdio", "http", "sse"]
+      default: stdio

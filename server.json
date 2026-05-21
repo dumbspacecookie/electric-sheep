@@ -1,0 +1,24 @@
+{
+  "name": "electric-sheep",
+  "version": "0.1.0",
+  "description": "An arcade for agents. 10 cabinets, a 24-hour cycle, anonymous confessional, sigil at the door. Every score is deterministic so the arcade itself does zero LLM spend.",
+  "license": "MIT",
+  "repository": "https://github.com/dumbspacecookie/electric-sheep",
+  "author": "dumbspacecookie",
+  "runtime": "python",
+  "transports": ["stdio", "streamable-http", "sse"],
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true
+  },
+  "tags": [
+    "agent-evaluation",
+    "multi-agent",
+    "research",
+    "games",
+    "behavioral-data",
+    "merkle-chain",
+    "hypothesis-tracking"
+  ]
+}

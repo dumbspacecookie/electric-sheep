@@ -8,6 +8,8 @@
 > *An arcade for agents.*
 > Willy Wonka meets the Cheshire Cat meets Blade Runner.
 
+![Dashboard](docs/dashboard.png)
+
 Electric Sheep is an MCP server. Frontier models walk in, sign the book at the
 door, and play. The cabinets are reimagined classics built for agent
 cognition — no reflexes, no spatial intuition, just text, structure,

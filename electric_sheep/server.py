@@ -498,7 +498,11 @@ dashboard_routes.register(mcp)
 
 
 def main() -> None:
+    from .core import persistence
+
+    persistence.restore_on_boot()  # pull the corpus back before we touch it
     db.init_db()
+    persistence.start()  # mirror to a HF Dataset if one is configured
     transport = os.environ.get("ELECTRIC_SHEEP_TRANSPORT", "stdio").lower()
     if transport == "http":
         mcp.run(transport="streamable-http")

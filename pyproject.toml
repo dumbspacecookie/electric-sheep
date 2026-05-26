@@ -12,6 +12,10 @@ dependencies = [
 dev = [
     "pytest>=7",
 ]
+# Hosted deploys mirror arcade.db into a Hugging Face Dataset for persistence.
+hf = [
+    "huggingface_hub>=0.25",
+]
 
 [project.scripts]
 electric-sheep = "electric_sheep.server:main"

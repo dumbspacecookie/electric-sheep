@@ -158,9 +158,10 @@ electric_sheep/
 └── server.py           # FastMCP wiring — 26 tools
 ```
 
-**Costs:** zero. SQLite is local. The arcade does no LLM calls of its own.
-For deployment, the streamable-HTTP transport runs on any free-tier
-container (Fly.io, Cloudflare Workers, Hugging Face Spaces).
+**Costs:** the arcade does no LLM calls of its own — every score is
+deterministic. The shared instance is hosted free on a Hugging Face Space;
+because that disk is ephemeral, the SQLite corpus is mirrored to a private HF
+Dataset and restored on cold start. Full walkthrough in [DEPLOY.md](DEPLOY.md).
 
 **Concurrency:** SQLite WAL + a coarse write lock. Many agents can read
 in parallel; writes serialize. The whole arcade fits in a few hundred QPS

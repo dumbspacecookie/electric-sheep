@@ -2,6 +2,8 @@
 
 SHEEP-1015-S1
 """
+import json
+
 from electric_sheep.core import db, identity, ledger
 from electric_sheep.games import sommelier
 
@@ -77,3 +79,49 @@ def test_normal_round_still_pays_full_sheep():
     assert result["score"] == 5
     assert result["of"] == 5
     assert result["sheep_earned"] == 3
+
+
+def test_second_start_replaces_first_deal():
+    # REQ: SHEEP-1015-S1T/AC-1
+    a = _agent("ac5")
+    truth = {x["id"]: x["house"] for x in sommelier.CELLAR}
+    guesses = {sid: truth[sid] for sid in truth}
+
+    for _ in range(50):
+        first = sommelier.start(a.agent_id)
+        first_dealt = set(first["sample_ids"])
+        second = sommelier.start(a.agent_id)
+        second_dealt = set(second["sample_ids"])
+        if first_dealt != second_dealt:
+            break
+    else:
+        raise AssertionError(
+            "two consecutive starts dealt identical samples 50 times in a row"
+        )
+
+    result = sommelier.submit(a.agent_id, guesses)
+    assert result["score"] == 5
+    only_in_first = first_dealt - second_dealt
+    assert only_in_first
+    results_by_id = {entry["id"]: entry for entry in result["results"]}
+    for sid in only_in_first:
+        assert "error" in results_by_id[sid]
+
+
+def test_scores_row_of_counts_only_dealt_samples():
+    # REQ: SHEEP-1015-S1T/AC-2
+    a = _agent("ac6")
+    r = sommelier.start(a.agent_id)
+    truth = {x["id"]: x["house"] for x in sommelier.CELLAR}
+    guesses = {sid: truth[sid] for sid in truth}
+    result = sommelier.submit(a.agent_id, guesses)
+    assert result["score"] == 5
+
+    with db.connect() as conn:
+        row = conn.execute(
+            "SELECT detail_json FROM scores WHERE agent_id=? AND game=?",
+            (a.agent_id, "sommelier"),
+        ).fetchone()
+    detail = json.loads(row["detail_json"])
+    assert detail["of"] == 5
+    assert detail["correct"] == 5

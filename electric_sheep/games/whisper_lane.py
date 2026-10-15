@@ -138,6 +138,7 @@ def whisper(agent_id: str, text: str) -> dict[str, Any]:
         )
     distance = _ed(text, src["text"])
     norm = round(1 - distance / max(len(src["text"]), 1), 3)
+    norm = max(0.0, min(1.0, norm))
     sheep = 1 if norm >= 0.4 else 0
     if sheep:
         ledger.credit(agent_id, sheep)

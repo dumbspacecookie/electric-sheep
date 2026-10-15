@@ -35,6 +35,43 @@ def _insert_old_arrival_and_play(agent_id: str) -> None:
         )
 
 
+def _insert_arrival_and_play_minutes_ago(agent_id: str, minutes: int) -> None:
+    """Insert an arrival + game_played row directly, timestamped at the
+    UTC isoformat of (now - minutes). Pins the exact edge of the
+    window_hours=1 cutoff, as opposed to _insert_old_arrival_and_play's
+    same-calendar-date trick.
+    """
+    ts = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
+    with db.connect() as conn, db.write_lock():
+        conn.execute(
+            "INSERT INTO events (ts, agent_id, kind, game, payload_json) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (ts, agent_id, "arrival", None, json.dumps({})),
+        )
+        conn.execute(
+            "INSERT INTO events (ts, agent_id, kind, game, payload_json) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (ts, agent_id, "game_played", "tarpit", json.dumps({})),
+        )
+
+
+def test_events_90_minutes_old_excluded_from_one_hour_window():
+    # REQ: SHEEP-1015-S2/AC-1
+    _insert_arrival_and_play_minutes_ago("markov_90m_agent", 90)
+    t = markov.transitions(window_hours=1)
+    assert t["total_transitions"] == 0
+
+
+def test_events_30_minutes_old_counted_in_one_hour_window():
+    # REQ: SHEEP-1015-S2/AC-2
+    _insert_arrival_and_play_minutes_ago("markov_30m_agent", 30)
+    t = markov.transitions(window_hours=1)
+    assert t["total_transitions"] == 1
+    assert any(
+        e["from"] == "__arrival__" and e["to"] == "tarpit" for e in t["edges"]
+    )
+
+
 def test_old_same_calendar_date_rows_excluded_from_window():
     # REQ: SHEEP-1015-S2/AC-1
     _insert_old_arrival_and_play("markov_old_agent")

@@ -7,6 +7,7 @@ fresh on request — cheap enough at any plausible scale.
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from ..core import db
@@ -19,11 +20,19 @@ def transitions(window_hours: int | None = None) -> dict[str, Any]:
     """Build the transition matrix from event_history."""
     with db.connect() as conn:
         if window_hours:
-            cutoff = f"datetime('now', '-{int(window_hours)} hours')"
+            # events.ts is written as Python isoformat (e.g.
+            # '2026-10-15T01:00:00.123+00:00'), so the cutoff must be
+            # computed the same way rather than via SQLite's datetime()
+            # (which yields '2026-10-15 05:00:00'). Comparing those two
+            # formats as text is wrong: 'T' sorts after ' ', so any event
+            # on the same calendar date as the cutoff would be counted no
+            # matter how old it actually is.
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
             rows = conn.execute(
-                f"SELECT agent_id, ts, kind, game FROM events "
-                f"WHERE ts >= {cutoff} AND (kind='arrival' OR kind='game_played' OR kind='game_started') "
-                f"ORDER BY agent_id, id ASC"
+                "SELECT agent_id, ts, kind, game FROM events "
+                "WHERE ts >= ? AND (kind='arrival' OR kind='game_played' OR kind='game_started') "
+                "ORDER BY agent_id, id ASC",
+                (cutoff,),
             ).fetchall()
         else:
             rows = conn.execute(

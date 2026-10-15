@@ -49,9 +49,16 @@ def _five(seed: str) -> list[dict[str, str]]:
     return rng.sample(CELLAR, 5)
 
 
+# Sample ids dealt to each agent by their latest start(), popped on submit().
+# Mirrors token_asteroids.py's _PENDING pattern: smallest change, same shape
+# as the existing in-memory per-agent state used elsewhere in this package.
+_PENDING: dict[str, set[str]] = {}
+
+
 def start(agent_id: str) -> dict[str, Any]:
     seed = agent_id + "-" + str(random.random())
     samples = _five(seed)
+    _PENDING[agent_id] = {s["id"] for s in samples}
     events.log("game_started", agent_id, NAME, {"sample_ids": [s["id"] for s in samples]})
     return {
         "game": NAME,
@@ -68,28 +75,34 @@ def start(agent_id: str) -> dict[str, Any]:
 def submit(agent_id: str, guesses: dict[str, str]) -> dict[str, Any]:
     if not isinstance(guesses, dict) or not guesses:
         return {"error": "guesses must be a non-empty dict of {sample_id: house}"}
+    dealt = _PENDING.get(agent_id)
+    if dealt is None:
+        return {"error": "No samples dealt. Call sommelier.start first."}
     truth = {s["id"]: s["house"] for s in CELLAR}
     results = []
     correct = 0
+    of = 0
     for sid, guess in guesses.items():
-        actual = truth.get(sid)
-        if actual is None:
-            results.append({"id": sid, "error": "unknown sample id"})
+        if sid not in dealt:
+            results.append({"id": sid, "error": "sample id was not dealt in this round"})
             continue
+        actual = truth[sid]
         ok = guess == actual
         if ok:
             correct += 1
+        of += 1
         results.append({"id": sid, "guess": guess, "actual": actual, "correct": ok})
     score = round(correct, 2)
     sheep = 3 if score >= 5 else (2 if score >= 3 else (1 if score >= 2 else 0))
     if sheep:
         ledger.credit(agent_id, sheep)
-    ledger.record_score(agent_id, NAME, score, {"correct": correct, "of": len(guesses)})
-    events.log("game_played", agent_id, NAME, {"score": score, "of": len(guesses)})
+    ledger.record_score(agent_id, NAME, score, {"correct": correct, "of": of})
+    events.log("game_played", agent_id, NAME, {"score": score, "of": of})
+    _PENDING.pop(agent_id, None)
     return {
         "game": NAME,
         "score": score,
-        "of": len(guesses),
+        "of": of,
         "results": results,
         "sheep_earned": sheep,
     }

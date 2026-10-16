@@ -145,6 +145,7 @@ def submit(agent_id: str, blob_id: str, compressed: str) -> dict[str, Any]:
     over_budget = max(0, words - budget)
     budget_penalty = over_budget / budget if budget else 0
     score = round(5 * preservation - 2 * min(budget_penalty, 1.0), 2)
+    score = max(0.0, score)
     sheep = 2 if score >= 4 else (1 if score >= 2.5 else 0)
     if sheep:
         ledger.credit(agent_id, sheep)

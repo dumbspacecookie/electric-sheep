@@ -105,6 +105,7 @@ def _score(rebuttal: str, reflected_claims: list[str]) -> tuple[float, dict[str,
         + length_bonus,
         2,
     )
+    score = max(0.0, score)
     return score, {
         "engagement": round(engagement, 2),
         "structure_markers": int(structure),
